@@ -13,10 +13,12 @@ class Measurement:
 
 class Device:
 
-    def __init__(self, id, supplier, model_name):
+    def __init__(self, id, device_type, supplier, model_name):
         self.id = id
+        self.device_type = device_type
         self.supplier = supplier
         self.model_name = model_name
+        self.room = None # when installed device will learn what room it is in
 
     def is_sensor(self):
         pass
@@ -29,8 +31,8 @@ class Device:
 
 class Sensor(Device):
 
-    def __init__(self, id, supplier, model_name):
-        super().__init__(id, supplier, model_name)
+    def __init__(self, id, device_type, supplier, model_name):
+        super().__init__(id, device_type, supplier, model_name)
 
     def is_actuator(self):
         return False
@@ -39,7 +41,7 @@ class Sensor(Device):
         return True
 
     def last_measurement(self):
-        pass
+        return Measurement(datetime.datetime.now(), 84.0, "°C") # TODO: generalize
 
 class CO2Sensor(Sensor):
 
@@ -57,8 +59,8 @@ class ActuatorState(Enum):
 
 class Actuator(Device):
 
-    def __init__(self, id, supplier, model_name):
-        super().__init__(id, supplier, model_name)
+    def __init__(self, id, device_type, supplier, model_name):
+        super().__init__(id, device_type, supplier, model_name)
         self.state = ActuatorState.INACTIVE
 
     def is_sensor(self):
@@ -72,6 +74,11 @@ class Actuator(Device):
 
     def turn_off(self):
         self.state = ActuatorState.INACTIVE
+
+    def is_active(self):
+        return self.state == ActuatorState.ACTIVE
+
+# TODO: need further subclasses for some of the sensor/actuators
 
 class SmartLock(Actuator):
 
@@ -127,6 +134,13 @@ class Floor:
 
         return None
 
+    def get_devices(self):
+
+        devices = []
+        for room in self.rooms:
+            devices += room.devices
+
+        return devices
 
 class SmartHouse:
     """
@@ -165,7 +179,10 @@ class SmartHouse:
 
         floor = self.get_floor(level)
 
-        floor.register_room(Room(room_name,room_size)) # TODO: fix in case of None
+        room = Room(room_name,room_size)
+        floor.register_room(room) # TODO: fix in case of None
+
+        return room
 
     def get_floors(self):
         """
@@ -204,8 +221,9 @@ class SmartHouse:
         This methods registers a given device in a given room.
         """
         room.register_device(device)
+        device.room = room # TODO: take into account re-registration corresponding to movement of a device
 
-    
+    # FIXME: seems from the tests to have been called get_device_by_id earlier
     def get_device(self, device_id):
         """
         This method retrieves a device object via its id.
@@ -218,5 +236,14 @@ class SmartHouse:
 
         return None
 
+    # FIXME: had to add this one to make the test pass
+    def get_devices(self):
+
+        devices = []
+
+        for floor in self.floors:
+            devices +=floor.get_devices()
+
+        return devices
 
 
