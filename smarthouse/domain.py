@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 
 class Measurement:
@@ -40,6 +41,16 @@ class Sensor(Device):
     def last_measurement(self):
         pass
 
+class CO2Sensor(Sensor):
+
+    def last_measurement(self):
+        return Measurement(datetime.datetime.now(),84,"PPM")
+
+class ElectricityMeter(Sensor):
+
+    def last_measurement(self):
+        return Measurement(datetime.datetime.now(),84,"kWh")
+
 class ActuatorState(Enum):
     ACTIVE = 1
     INACTIVE = 2
@@ -62,6 +73,11 @@ class Actuator(Device):
     def turn_off(self):
         self.state = ActuatorState.INACTIVE
 
+class SmartLock(Actuator):
+
+    def __init__(self, id, supplier, model_name):
+        super().__init__(id, supplier, model_name)
+
 class Room:
 
     def __init__(self, name, area):
@@ -69,17 +85,48 @@ class Room:
         self.area = area
         self.devices = []
 
-class SmartLock(Actuator):
+    def register_device(self,device):
+        self.devices.append(device)
 
-    def __init__(self, id, supplier, model_name):
-        super().__init__(id, supplier, model_name)
+    def find_device(self,device_id):
 
+        for device in self.devices:
+            if device.id == device_id:
+                return device
+
+        return None
 
 class Floor:
 
-    def __init__(self, level, rooms):
+    def __init__(self, level):
         self.level = level
-        self.rooms = rooms
+        self.rooms = []
+
+    def register_room(self, room):
+        self.rooms.append(room)
+
+    def get_rooms(self):
+        return self.rooms
+
+    def get_area(self):
+
+        area = 0
+        for room in self.rooms:
+            area += room.area
+
+        return area
+
+    def find_device(self,device_id):
+
+        for room in self.rooms:
+
+            device = room.find_device(device_id)
+
+            if device:
+                return device
+
+        return None
+
 
 class SmartHouse:
     """
@@ -92,30 +139,42 @@ class SmartHouse:
     """
 
     def __init__(self):
-        floors = []
+        self.floors = []
 
     def register_floor(self, level):
         """
         This method registers a new floor at the given level in the house
         and returns the respective floor object.
         """
+        floor = Floor(level)
+        self.floors.append(floor)
 
-    def register_room(self, floor, room_size, room_name = None):
+    def get_floor(self,level):
+
+        for floor in self.floors:
+            if floor.level == level:
+                return floor
+
+        return None
+
+    def register_room(self, level, room_size, room_name = None):
         """
         This methods registers a new room with the given room areal size 
         at the given floor. Optionally the room may be assigned a mnemonic name.
         """
-        pass
 
+        floor = self.get_floor(level)
+
+        floor.register_room(Room(room_name,room_size)) # TODO: fix in case of None
 
     def get_floors(self):
         """
         This method returns the list of registered floors in the house.
         The list is ordered by the floor levels, e.g. if the house has 
         registered a basement (level=0), a ground floor (level=1) and a first floor 
-        (leve=1), then the resulting list contains these three flors in the above order.
+        (leve=1), then the resulting list contains these three floors in the above order.
         """
-        pass
+        return self.floors # TODO: fix the sorting
 
 
     def get_rooms(self):
@@ -123,25 +182,41 @@ class SmartHouse:
         This methods returns the list of all registered rooms in the house.
         The resulting list has no particular order.
         """
-        pass
+        rooms = []
 
+        for floor in self.floors:
+            rooms += floor.get_rooms()
+
+        return rooms
 
     def get_area(self):
         """
         This methods return the total area size of the house, i.e. the sum of the area sizes of each room in the house.
         """
+        area = 0
+        for floor in self.floors:
+            area += floor.get_area()
 
+        return area
 
     def register_device(self, room, device):
         """
         This methods registers a given device in a given room.
         """
-        pass
+        room.register_device(device)
 
     
     def get_device(self, device_id):
         """
         This method retrieves a device object via its id.
         """
-        pass
+        for floor in self.floors:
+            device = floor.find_device(device_id)
+
+            if device:
+                return device
+
+        return None
+
+
 
