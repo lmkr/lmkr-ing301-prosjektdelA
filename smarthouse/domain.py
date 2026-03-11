@@ -108,6 +108,7 @@ class Room:
 
         if device in self.devices:
             self.devices.remove(device)
+            device.room = None
 
 class Floor:
 
@@ -185,8 +186,11 @@ class SmartHouse:
 
         floor = self.get_floor(level)
 
-        room = Room(room_name,room_size)
-        floor.register_room(room) # TODO: fix in case of None
+        room = None
+
+        if floor is not None:
+            room = Room(room_name, room_size)
+            floor.register_room(room)
 
         return room
 
@@ -197,7 +201,7 @@ class SmartHouse:
         registered a basement (level=0), a ground floor (level=1) and a first floor 
         (leve=1), then the resulting list contains these three floors in the above order.
         """
-        return self.floors # TODO: fix the sorting
+        return list.sort(self.floors, key= lambda f: f.level)
 
 
     def get_rooms(self):
@@ -226,7 +230,10 @@ class SmartHouse:
         """
         This methods registers a given device in a given room.
         """
-        room.deregister_device(device)
+        current_room = device.room
+        if current_room is not None:
+            current_room.deregister_device(device)
+
         room.register_device(device)
 
     # FIXME: seems from the tests to have been called get_device_by_id earlier
