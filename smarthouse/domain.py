@@ -1,6 +1,8 @@
 import datetime
 from enum import Enum
 
+import typing
+
 class Measurement:
     """
     This class represents a measurement taken from a sensor.
@@ -31,8 +33,9 @@ class Device:
 
 class Sensor(Device):
 
-    def __init__(self, id, device_type, supplier, model_name):
+    def __init__(self, id, device_type, supplier, model_name, unit):
         super().__init__(id, device_type, supplier, model_name)
+        self.unit = unit
 
     def is_actuator(self):
         return False
@@ -41,7 +44,7 @@ class Sensor(Device):
         return True
 
     def last_measurement(self):
-        return Measurement(datetime.datetime.now(), 84.0, "°C") # TODO: generalize
+        return Measurement(datetime.datetime.now(), 84.0,self.unit) # TODO: generalize
 
 class CO2Sensor(Sensor):
 
@@ -78,12 +81,21 @@ class Actuator(Device):
     def is_active(self):
         return self.state == ActuatorState.ACTIVE
 
-# TODO: need further subclasses for some of the sensor/actuators
-
 class SmartLock(Actuator):
 
     def __init__(self, id, supplier, model_name):
-        super().__init__(id, supplier, model_name)
+        super().__init__(id, "Smart Lock", supplier, model_name)
+
+class HeatPump(Actuator):
+
+    def __init__(self, id, supplier, model_name):
+        super().__init__(id, "Heat Pump", supplier, model_name)
+        self.target = None
+
+    # @override
+    def turn_on(self, target):
+        self.state = ActuatorState.ACTIVE
+        self.target = target
 
 class Room:
 
