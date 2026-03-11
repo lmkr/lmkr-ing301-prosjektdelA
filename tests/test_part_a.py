@@ -84,7 +84,7 @@ class TestPartA(TestCase):
                 dresser = r 
                 break
         self.assertIsNotNone(dresser)
-        bulp = h.get_device_by_id("6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28")
+        bulp = h.get_device("6b1c5f6b-37f6-4e3d-9145-1cfbe2f1fc28")
         gr2 = bulp.room
         # before
         self.assertEqual(len(dresser.devices), 0)

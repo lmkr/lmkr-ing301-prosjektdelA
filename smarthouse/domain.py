@@ -88,7 +88,7 @@ class SmartLock(Actuator):
 class Room:
 
     def __init__(self, name, area):
-        self.name = name
+        self.room_name = name
         self.area = area
         self.devices = []
 
