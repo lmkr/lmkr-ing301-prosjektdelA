@@ -94,6 +94,7 @@ class Room:
 
     def register_device(self,device):
         self.devices.append(device)
+        device.room = self
 
     def find_device(self,device_id):
 
@@ -102,6 +103,11 @@ class Room:
                 return device
 
         return None
+
+    def deregister_device(self, device):
+
+        if device in self.devices:
+            self.devices.remove(device)
 
 class Floor:
 
@@ -220,8 +226,8 @@ class SmartHouse:
         """
         This methods registers a given device in a given room.
         """
+        room.deregister_device(device)
         room.register_device(device)
-        device.room = room # TODO: take into account re-registration corresponding to movement of a device
 
     # FIXME: seems from the tests to have been called get_device_by_id earlier
     def get_device(self, device_id):
